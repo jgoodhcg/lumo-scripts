@@ -54,7 +54,7 @@
         fraction (/ (js/parseInt (last split-up)) 100)
         minutes (* 60 fraction)]
 
-    {:h hours :m (.floor js/Math minutes)}))
+    {:h hours :m (.round js/Math minutes)}))
 
 (defn total-time-by-project [col]
   (->> col
@@ -93,16 +93,24 @@
    :total (-> data-grouped
               (get index)
               (total-time)
-              (float-str->dur))}
-  )
+              (float-str->dur))})
 
-(pprint {:mon (day-of-week-print 1)
-         :tue (day-of-week-print 2)
-         :wed (day-of-week-print 3)
-         :thu (day-of-week-print 4)
-         :fri (day-of-week-print 5)
-         :sat (day-of-week-print 6)
-         :sun (day-of-week-print 7)
-         })
-(pprint {:all (total-time-by-project data)
-         :total (float-str->dur (total-time data))})
+(def week {:mon 1 :tue 2 :wed 3 :thu 4 :fri 5 :sat 6 :sun 7})
+
+(dorun (->> week
+            (map
+             (fn [[day-of-week num]]
+               (let [heading (str "======== " (name day-of-week) " =======")
+                     data (day-of-week-print num)]
+                 (println heading)
+                 (println "--- by project ---")
+                 (pprint (:by-project data))
+                 (println "--- total ---")
+                 (pprint (:total data))
+                 (println))))))
+
+(println "================ week ================")
+(println "--- all ---")
+(pprint (total-time-by-project data))
+(println "--- total ---")
+(pprint (float-str->dur (total-time data)))
