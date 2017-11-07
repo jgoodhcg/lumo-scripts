@@ -1,0 +1,108 @@
+#!/usr/bin/env lumo
+;; -*- mode: clojurescript -*-
+
+(require '[cljs.pprint :refer [pprint]]
+         '[lumo.io :as io]
+         '[cljs.reader :refer [read-string]]
+            )
+
+(def path (first *command-line-args*))
+(def file (io/slurp path))
+
+(def raw-data (-> file
+              (.split "## time log")
+              (last)
+              (.split "```")
+              (nth 1)
+              (read-string)
+              (butlast) ;; removes template
+              ))
+
+(defn string->date [string]
+  (as-> string s
+    (.split s " ")
+    (map js/parseInt s)
+    (apply #(new js/Date %1 (- %2 1) ;; decrement month for sane data logging
+                 %3 %4 %5) s)))
+
+(defn filter-day-of-week [col day-of-week]
+  "day-of-week is zero indexed"
+  (filter (fn [event]
+            (= day-of-week (.getDay (:start event) ;; when midnight straddle split is in affect it won't matter that we check start
+                                    )))
+          col))
+
+(defn total-time [col]
+  (.toFixed
+   (->> col
+        (reduce (fn [running event]
+                  (let [time (- (.valueOf (:stop event))
+                                (.valueOf (:start event)))
+                        new-running (+ running time)]
+                    new-running)
+                  )
+                0)
+        (* (/ 1 1000)) ;; ms->s
+        (* (/ 1 60))   ;; s->m
+        (* (/ 1 60))   ;; m->h
+        )
+   2))
+
+(defn float-str->dur [str]
+  (let [split-up (.split str ".")
+        hours (js/parseInt (first split-up))
+        fraction (/ (js/parseInt (last split-up)) 100)
+        minutes (* 60 fraction)]
+
+    {:h hours :m (.floor js/Math minutes)}))
+
+(defn total-time-by-project [col]
+  (->> col
+       (group-by #(:project %))
+       (map (fn [[project events]]
+              {project
+               (->> events
+                    (total-time)
+                    (float-str->dur))}))))
+
+(def data (->> raw-data
+               (map (fn [{:keys [start stop project description]}]
+                      (let [
+                            start-time (string->date start)
+                            stop-time  (string->date stop)
+                            ]
+                        ;; TODO make sure stop comes after start
+                        ;; split straddling midnight by
+                        ;; checking dates are different
+                        ;; create two tasks and return [{} {}]
+                        ;; flatten collection in (->> data)
+                        {:start start-time
+                         :stop stop-time
+                         :project project
+                         :description description})))
+               ;; todo add validation of spec for entry and print on failure
+               ;; possibly with line number?
+               ))
+
+(def data-grouped
+  (->> data
+       (group-by (fn [event] (.getDay (:start event))))))
+
+(defn day-of-week-print [index]
+  {:by-project (apply merge (total-time-by-project (get data-grouped index)))
+   :total (-> data-grouped
+              (get index)
+              (total-time)
+              (float-str->dur))}
+  )
+
+(pprint {:mon (day-of-week-print 1)
+         :tue (day-of-week-print 2)
+         :wed (day-of-week-print 3)
+         :thu (day-of-week-print 4)
+         :fri (day-of-week-print 5)
+         :sat (day-of-week-print 6)
+         :sun (day-of-week-print 7)
+         })
+(pprint {:all (total-time-by-project data)
+         :total (float-str->dur (total-time data))})
