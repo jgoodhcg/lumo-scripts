@@ -6,17 +6,19 @@
          '[cljs.reader :refer [read-string]]
             )
 
-(def path (first *command-line-args*))
-(def file (io/slurp path))
+(def paths *command-line-args*)
 
-(def raw-data (-> file
-              (.split "## time log")
-              (last)
-              (.split "```")
-              (nth 1)
-              (read-string)
-              (butlast) ;; removes template
-              ))
+(def files (map #(io/slurp %) paths))
+
+(def raw-data (flatten (map #(-> %
+                                 (.split "## time log")
+                                 (last)
+                                 (.split "```")
+                                 (nth 1)
+                                 (read-string)
+                                 ;; (butlast) ;; removes template
+                                 )
+                            files)))
 
 (defn string->date [string]
   (as-> string s
@@ -66,6 +68,9 @@
                     (float-str->dur))}))))
 
 (def data (->> raw-data
+               (filter (fn [{:keys [start stop project description]}]
+                         (and (some? start) (some? stop)
+                              (not (empty? start))) (not (empty? stop))))
                (map (fn [{:keys [start stop project description]}]
                       (let [
                             start-time (string->date start)
@@ -109,8 +114,8 @@
                  (pprint (:total data))
                  (println))))))
 
-(println "================ week ================")
-(println "--- all ---")
+(println "================ all ================")
+(println "--- by project ---")
 (pprint (total-time-by-project data))
 (println "--- total ---")
 (pprint (float-str->dur (total-time data)))
