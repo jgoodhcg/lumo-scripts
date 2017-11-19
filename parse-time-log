@@ -11,7 +11,7 @@
 (def files (map #(io/slurp %) paths))
 
 (def raw-data (flatten (map #(-> %
-                                 (.split "## time log")
+                                 (.split "## Time log")
                                  (last)
                                  (.split "```")
                                  (nth 1)
