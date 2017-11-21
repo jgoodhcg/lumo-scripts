@@ -102,6 +102,10 @@
 
 (def week {:mon 1 :tue 2 :wed 3 :thu 4 :fri 5 :sat 6 :sun 7})
 
+;;
+;; General time log by project, weekday, and totals
+;;
+
 (dorun (->> week
             (map
              (fn [[day-of-week num]]
@@ -119,3 +123,46 @@
 (pprint (total-time-by-project data))
 (println "--- total ---")
 (pprint (float-str->dur (total-time data)))
+
+special report by project
+
+;;
+;; Report for project by date
+;;
+
+;; use
+;; $ parse-time-log file1 file2 | tee project-YYYY-MM.md to store reports
+
+;; (def this-project :home-plate)
+
+;; (def data-for-project (->> data
+;;                            (group-by #(:project %))
+;;                            (this-project)
+;;                            (group-by (fn [event] (.valueOf
+;;                                                   (new js/Date
+;;                                                        (.toDateString (:start event))))))
+;;                            (into (sorted-map))
+;;                            ))
+
+;; (println (str
+;;           "# "
+;;           (name this-project)
+;;           " "
+;;           (->> data-for-project
+;;                (first)
+;;                (first)
+;;                ((fn [val-of] (.toDateString (new js/Date val-of)))))
+;;           " - "
+;;           (->> data-for-project
+;;                (last)
+;;                (first)
+;;                ((fn [val-of] (.toDateString (new js/Date val-of)))))
+;;           " #"))
+;; (println)
+;; (dorun (map (fn [[date events]]
+;;               (println (str "## " (.toDateString (new js/Date date)) " ##"))
+;;               (dorun (map (fn [event]
+;;                             (println (str "- " (:description event))))
+;;                           events))
+;;               (println))
+;;             data-for-project))
