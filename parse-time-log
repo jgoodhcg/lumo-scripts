@@ -112,16 +112,16 @@
                (let [heading (str "======== " (name day-of-week) " =======")
                      data (day-of-week-print num)]
                  (println heading)
-                 (println "--- by project ---")
+                 (println "----- by project ---")
                  (pprint (:by-project data))
-                 (println "--- total ---")
+                 (println "----- total --------")
                  (pprint (:total data))
                  (println))))))
 
 (println "================ all ================")
-(println "--- by project ---")
+(println "---------------- by project ---------")
 (pprint (total-time-by-project data))
-(println "--- total ---")
+(println "---------------- total --------------")
 (pprint (float-str->dur (total-time data)))
 
 special report by project
