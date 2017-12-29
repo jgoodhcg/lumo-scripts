@@ -65,7 +65,8 @@
               {project
                (->> events
                     (total-time)
-                    (float-str->dur))}))))
+                    (float-str->dur))}))
+       (sort #(compare (first (keys %1)) (first (keys %2))))))
 
 (def data (->> raw-data
                (filter (fn [{:keys [start stop project description]}]
