@@ -124,7 +124,7 @@
 (println "---------------- total --------------")
 (pprint (float-str->dur (total-time data)))
 
-special report by project
+;; special report by project
 
 ;;
 ;; Report for project by date
