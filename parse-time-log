@@ -11,10 +11,15 @@
 (def files (map #(io/slurp %) paths))
 
 (def raw-data (flatten (map #(-> %
-                                 (.split "## Time log")
-                                 (last)
-                                 (.split "```")
-                                 (nth 1)
+                                 ;; TODO create command line arguments to distinguish
+                                 ;; between log.md files
+                                 ;; that need the commented out section below
+                                 ;; and edn time log files that can just be read
+
+                                 ;; (.split "## Time log")
+                                 ;; (last)
+                                 ;; (.split "```")
+                                 ;; (nth 1)
                                  (read-string)
                                  ;; (butlast) ;; removes template
                                  )
