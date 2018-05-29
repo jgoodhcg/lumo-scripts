@@ -1,0 +1,20 @@
+#!/usr/bin/env lumo
+;; -*- mode: clojurescript -*-
+
+(require '[cljs.pprint :refer [pprint]]
+         '[lumo.io :as io]
+         '[cljs.reader :refer [read-string]])
+
+(def paths *command-line-args*)
+
+(def files (map #(io/slurp %) paths))
+
+(def raw-data (flatten (map #(-> %
+                                 (.split "## Time log")
+                                 (last)
+                                 (.split "```")
+                                 (nth 1)
+                                 (read-string))
+                            files)))
+
+(io/spit "/home/justin/gfs/notes/f-2018/2018-05-29-converted.edn" raw-data)
