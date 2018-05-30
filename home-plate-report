@@ -50,7 +50,24 @@
 
     {:h hours :m (.round js/Math minutes)}))
 
+(defn total-time [col]
+  (.toFixed
+   (->> col
+        (reduce (fn [running event]
+                  (let [time (- (.valueOf (:stop event))
+                                (.valueOf (:start event)))
+                        new-running (+ running time)]
+                    new-running)
+                  )
+                0)
+        (* (/ 1 1000)) ;; ms->s
+        (* (/ 1 60))   ;; s->m
+        (* (/ 1 60))   ;; m->h
+        )
+   2))
+
 (dorun (->> data
+            (sort-by #(.valueOf (:start %)))
             (map (fn [{:keys [start stop project description]}]
                    (println (str (float-str->dur
                                   (get-duration-float {:start start
@@ -59,3 +76,6 @@
                                  (.toDateString start)
                                  " - "
                                  description))))))
+(println " - - - - ")
+(println (str (float-str->dur (total-time data)) " - Total Time"))
+
