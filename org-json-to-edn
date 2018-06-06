@@ -1,0 +1,18 @@
+#!/usr/bin/env lumo
+;; -*- mode: clojurescript -*-
+
+(require '[cljs.pprint :refer [pprint]]
+         '[lumo.io :as io]
+         '[cljs.reader :refer [read-string]])
+
+(def paths *command-line-args*)
+
+(def files (map #(io/slurp %) paths))
+
+(def raw-data (->> files
+                   (map (fn [file]
+                          (->> file
+                               (.parse js/JSON)
+                               (#(js->clj % :keywordize-keys true)))))))
+
+(pprint raw-data)
